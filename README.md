@@ -1,3 +1,9 @@
+# MechDojo
+
+by [github.com/chakshu-c](https://github.com/chakshu-c) and [github.com/arnavpopley](https://github.com/arnavpopley)
+
+---
+
 # Build an app for Pippa
 
 You have about two hours. At the end of it, a program you built will be running

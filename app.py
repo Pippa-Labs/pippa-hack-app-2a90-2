@@ -1,40 +1,24 @@
-"""Your app. Replace this with whatever you are building.
+"""MechDojo: mechanical engineering practice questions, and marking.
 
-The shape never changes, whatever your app does:
+Two outcomes:
 
-    class App:
-        manifest  -> the parsed manifest.yaml sitting next to this file
-        handle(call) -> Result
+* question.get  - picks a question from questions.json, on the topic the
+                  student names (or any topic). Never returns the answer.
+* answer.check  - marks the student's number against the stored answer,
+                  within the question's tolerance, and returns the worked
+                  solution.
 
-`handle` is called once per request and must return a `Result` whose `data`
-matches the `output` your manifest declares for that outcome — exactly: every
-declared field present, nothing extra, right types. The runtime checks it and
-refuses anything that does not match, which is deliberate. An app that can
-return surprise fields is an app Pippa cannot describe to a user before they
-install it.
-
-Three things worth knowing before you start:
-
-**You get the inputs, and nothing about who asked.** No user id, no account,
-no conversation. `call.inputs` is what Pippa extracted from the message;
-besides it, `call.context` carries only the time, an id for your logs, and
-whether the person picked your app by name. This is on purpose: your app
-cannot leak what it was never given.
-
-**You keep nothing.** A fresh copy of this class is built for every call and
-thrown away afterwards. Writing to a file or a global will appear to work and
-then silently stop, because the next call may be on a different machine.
-
-**Errors are part of the design.** Raise `AgentAppError` with a `user_message`
-when you cannot answer. That message is the one a user may see; everything
-else — the exception type, the traceback — stays in the logs.
+No network at all. The app keeps nothing between calls, so the question is
+chosen from `call.context.now` (seconds since midnight, modulo the number of
+matching questions).
 """
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+import json
+import math
+import re
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
 from pippa_agentapp_sdk import (
     AgentAppError,
@@ -45,23 +29,79 @@ from pippa_agentapp_sdk import (
     validate_manifest,
 )
 
-MANIFEST_PATH = Path(__file__).with_name("manifest.yaml")
+HERE = Path(__file__).resolve().parent
+MANIFEST_PATH = HERE / "manifest.yaml"
+QUESTIONS: list[dict] = json.loads((HERE / "questions.json").read_text("utf-8"))
+BY_ID: dict[str, dict] = {q["id"]: q for q in QUESTIONS}
+
+HOW_TO_ANSWER = (
+    "Reply with your number and the question code, for example: "
+    "my answer to TH-03 is 42"
+)
+
+#: Loose topic words, matched at the start of a word. Checked in this order,
+#: so "thermodynamics" is thermodynamics (not dynamics) and "fluid dynamics"
+#: is fluid mechanics.
+TOPIC_WORDS = [
+    ("thermodynamics",
+     r"thermo|heat|gas|entrop|enthalp|carnot|otto|diesel|rankine|brayton|"
+     r"cycle|first law|second law|refrigerat|temperature|piston|isothermal|"
+     r"isentropic|adiabatic"),
+    ("fluid mechanics",
+     r"fluid|hydro|bernoulli|continuity|reynold|pipe|flow|viscos|buoyan|"
+     r"manometer|nozzle|venturi|head loss|darcy|water"),
+    ("solid mechanics",
+     r"solid|stress|strain|beam|bend|torsion|torque|shaft|deflect|strength|"
+     r"material|elastic|young|modulus|structur|static|cantilever|shear|axial"),
+    ("dynamics",
+     r"dynamic|kinematic|kinetic|momentum|impulse|collision|impact|vibrat|"
+     r"oscillat|spring|pendulum|projectile|motion|acceleration|velocity|"
+     r"energy|flywheel|rotation|frequency"),
+]
+TOPIC_PATTERNS = [
+    (name, re.compile(r"\b(?:" + words + r")", re.IGNORECASE))
+    for name, words in TOPIC_WORDS
+]
+#: Words meaning "any topic will do".
+ANY_TOPIC = re.compile(
+    r"\b(?:any|random|mix|general|all|every|whatever|surprise|mech|engineering)",
+    re.IGNORECASE,
+)
+
+#: A question code: two letters and a number, loosely written ("fl2", "FL 02").
+CODE = re.compile(r"\b([A-Za-z]{2})\s*[-_ ]?\s*(\d{1,2})\b")
 
 
-class CannotReadDate(AgentAppError):
-    """Raised when the message did not contain a date we can work with."""
+class UnknownTopic(AgentAppError):
+    user_message = (
+        "I only have questions on thermodynamics, fluid mechanics, solid "
+        "mechanics and dynamics. Name one of those, or ask for any topic."
+    )
+    retryable = False
 
-    # What a user may be shown. Write it as a sentence, not an error code.
-    user_message = "I could not work out which date you meant."
+
+class MissingCode(AgentAppError):
+    user_message = (
+        "Tell me which question you are answering, with its code, for "
+        "example: my answer to TH-03 is 42"
+    )
+    retryable = False
+
+
+class UnknownCode(AgentAppError):
+    user_message = "I do not have a question with that code."
+    retryable = False
+
+
+class MissingNumber(AgentAppError):
+    user_message = (
+        "Tell me your answer as a number, for example: my answer to TH-03 is 42"
+    )
     retryable = False
 
 
 class App:
-    """A small, complete example: count the days until a date."""
-
     def __init__(self) -> None:
-        # Validated at construction, so an app whose manifest is wrong fails
-        # immediately and loudly rather than on some later call.
         self._manifest = validate_manifest(load_manifest_file(MANIFEST_PATH))
 
     @property
@@ -69,110 +109,117 @@ class App:
         return self._manifest
 
     def handle(self, call: Call) -> Result:
-        """One request in, one Result out.
+        if call.outcome_id == "question.get":
+            return self._question(call)
+        if call.outcome_id == "answer.check":
+            return self._check(call)
+        raise AgentAppError(f"this app cannot do {call.outcome_id!r}")
 
-        `call.outcome_id` says which of your manifest's outcomes was asked
-        for. With one outcome you can ignore it; with several, branch on it.
-        """
-        if call.outcome_id != "days.until":
-            raise AgentAppError(f"this app cannot do {call.outcome_id!r}")
+    # ── question.get ────────────────────────────────────────────────────────
 
-        text = (call.inputs.get("date") or "").strip()
-        if not text:
-            # The manifest tells the extractor to send an empty string rather
-            # than guess, so this is the ordinary "they did not say" path.
-            #
-            # A missing or unreadable date (here, and in `_parse` below) is
-            # the only thing this app refuses for, which is why it never reads
-            # `call.context.explicit`, True when the person picked the app
-            # with @. That refusal is right whoever chose the app; the test
-            # that says so is in test_app.py.
-            raise CannotReadDate("no date in the message")
-
-        # `call.context.now` is the current time, supplied by the runtime
-        # rather than read from the clock. That is what makes an app testable:
-        # a test can say what "now" is.
-        today = self._today(call)
-        target = self._parse(text, today)
-        difference = (target - today).days
-
+    def _question(self, call: Call) -> Result:
+        topic_text = (call.inputs.get("topic") or "").strip()
+        pool = questions_for(topic_text)
+        now = call.context.now
+        seconds = now.hour * 3600 + now.minute * 60 + now.second
+        question = pool[seconds % len(pool)]
         return Result(
             data={
-                "days": abs(difference),
-                "target_date": target.isoformat(),
-                "weekday": target.strftime("%A"),
-                "already_passed": difference < 0,
+                "question_id": question["id"],
+                "topic": question["topic"],
+                "question": question["question"],
+                "how_to_answer": HOW_TO_ANSWER,
             },
-            # Optional. One plain sentence Pippa may use when it writes its
-            # reply. Say what you found, not what you did.
-            narrative=self._sentence(target, difference),
+            narrative=f"Here is a {question['topic']} question, code {question['id']}.",
         )
 
-    @staticmethod
-    def _today(call: Call) -> date:
-        """The user's today, not the server's.
+    # ── answer.check ────────────────────────────────────────────────────────
 
-        A server in UTC and a user in Auckland disagree about what day it is
-        for twelve hours out of every twenty-four, and "how many days until"
-        is exactly the question that notices.
-        """
-        # No try/except around ZoneInfo, and that is the point: the manifest
-        # declares this input as `type: timezone`, so the runtime has already
-        # rejected anything that is not a real IANA zone before your code
-        # runs. Declaring the right type is cheaper than validating by hand,
-        # and the user gets a better error.
-        zone = call.inputs.get("timezone")
-        moment: datetime = call.context.now
-        if zone:
-            moment = moment.astimezone(ZoneInfo(zone))
-        return moment.date()
+    def _check(self, call: Call) -> Result:
+        raw_code = (call.inputs.get("question_id") or "").strip()
+        if not raw_code:
+            raise MissingCode("no question code in the message")
 
-    @staticmethod
-    def _parse(text: str, today: date) -> date:
-        """Turn what the user wrote into a date.
+        code = normalise_code(raw_code)
+        question = BY_ID.get(code) if code else None
+        if question is None:
+            error = UnknownCode(f"unknown question code {raw_code!r}")
+            error.user_message = f"I do not have a question with the code {raw_code}."
+            raise error
 
-        Deliberately small — real date parsing is its own project. Handles
-        `YYYY-MM-DD`, `25 December`, `December 25` and a bare day number.
-        """
-        cleaned = text.replace(",", " ").strip()
+        given = call.inputs.get("answer")
+        if (given is None or isinstance(given, bool)
+                or not math.isfinite(float(given))):
+            error = MissingNumber(f"no numeric answer for {code}")
+            error.user_message = (
+                f"Tell me your answer to {code} as a number, for example: "
+                f"my answer to {code} is 42"
+            )
+            raise error
 
-        for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y"):
-            try:
-                return datetime.strptime(cleaned, fmt).date()
-            except ValueError:
-                continue
+        given = float(given)
+        expected = float(question["answer"])
+        unit = question["unit"]
+        allowed = abs(expected) * float(question["tolerance_percent"]) / 100
+        correct = abs(given - expected) <= allowed + 1e-12
 
-        for fmt in ("%d %B", "%B %d", "%d %b", "%b %d"):
-            try:
-                parsed = datetime.strptime(cleaned, fmt).date()
-            except ValueError:
-                continue
-            # A bare day and month has no year. "25 December" asked in
-            # February means this year; asked in December means this year too,
-            # until it has passed, and then it means next year.
-            candidate = parsed.replace(year=today.year)
-            if candidate < today:
-                candidate = candidate.replace(year=today.year + 1)
-            return candidate
-
-        if cleaned.lower() == "tomorrow":
-            return today + timedelta(days=1)
-
-        raise CannotReadDate(f"could not parse {text!r} as a date")
-
-    @staticmethod
-    def _sentence(target: date, difference: int) -> str:
-        # Built by hand rather than with `%-d`, which is a GNU extension: it
-        # raises ValueError on Windows, where half of you are developing, and
-        # the failure would only show up at the last line of a working app.
-        pretty = (
-            f"{target.strftime('%A')} {target.day} "
-            f"{target.strftime('%B')} {target.year}"
+        right = with_unit(format_answer(expected), unit)
+        opening = "Correct." if correct else "Not quite."
+        return Result(
+            data={
+                "correct": correct,
+                "your_answer": with_unit(plain_number(given), unit),
+                "right_answer": right,
+                "worked_solution": question["solution"],
+            },
+            narrative=f"{opening} The answer is {right}.",
         )
-        if difference == 0:
-            return f"That is today, {pretty}."
-        if difference < 0:
-            return f"{pretty} was {abs(difference)} days ago."
-        if difference == 1:
-            return f"{pretty} is tomorrow."
-        return f"There are {difference} days until {pretty}."
+
+
+# ── Helpers (no state) ──────────────────────────────────────────────────────
+
+
+def questions_for(topic_text: str) -> list[dict]:
+    """The questions matching what the student named. Empty means any topic."""
+    if not topic_text:
+        return QUESTIONS
+    for name, pattern in TOPIC_PATTERNS:
+        if pattern.search(topic_text):
+            return [q for q in QUESTIONS if q["topic"] == name]
+    if ANY_TOPIC.search(topic_text):
+        return QUESTIONS
+    raise UnknownTopic(f"no topic matches {topic_text!r}")
+
+
+def normalise_code(text: str) -> str:
+    """'fl2', 'FL 02', 'fl-02' -> 'FL-02'. Empty string if no code is there."""
+    match = CODE.search(text)
+    if not match:
+        return ""
+    return f"{match.group(1).upper()}-{int(match.group(2)):02d}"
+
+
+def format_answer(value: float) -> str:
+    """Four significant figures, trailing zeros dropped: 164.0 -> '164'."""
+    if value == 0:
+        return "0"
+    decimals = max(0, 3 - math.floor(math.log10(abs(value))))
+    text = f"{value:.{decimals}f}"
+    if "." in text:
+        text = text.rstrip("0").rstrip(".")
+    return text
+
+
+def plain_number(value: float) -> str:
+    """The student's number as they gave it: 42.0 -> '42', 3.9 -> '3.9'."""
+    if value.is_integer() and abs(value) < 1e15:
+        return str(int(value))
+    return repr(value)
+
+
+def with_unit(number: str, unit: str) -> str:
+    if not unit:
+        return number
+    if unit == "%":
+        return f"{number}%"
+    return f"{number} {unit}"

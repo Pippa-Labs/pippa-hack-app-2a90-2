@@ -1,0 +1,218 @@
+[
+  {
+    "id": "TH-01",
+    "topic": "thermodynamics",
+    "question": "A rigid sealed tank of gas receives 45 kJ of heat while a paddle wheel inside it does 12 kJ of work on the gas. What is the change in the internal energy of the gas? Answer in kJ.",
+    "answer": 57,
+    "unit": "kJ",
+    "tolerance_percent": 2,
+    "solution": "First law, closed system: dU = Q - W, where W is the work done BY the gas.\nThe paddle wheel does work ON the gas, so W = -12 kJ.\ndU = 45 - (-12) = 57 kJ."
+  },
+  {
+    "id": "TH-02",
+    "topic": "thermodynamics",
+    "question": "A rigid tank of volume 0.25 m^3 holds 0.8 kg of air at 350 K. Treat air as an ideal gas with R = 287 J/(kg K). What is the pressure in the tank? Answer in kPa.",
+    "answer": 321.4,
+    "unit": "kPa",
+    "tolerance_percent": 2,
+    "solution": "Ideal gas: pV = mRT, so p = mRT / V.\np = 0.8 x 287 x 350 / 0.25 = 321,440 Pa.\np = 321.4 kPa."
+  },
+  {
+    "id": "TH-03",
+    "topic": "thermodynamics",
+    "question": "A heat engine works between a hot reservoir at 820 K and a cold reservoir at 300 K. What is the highest thermal efficiency it could possibly have? Answer as a percentage.",
+    "answer": 63.41,
+    "unit": "%",
+    "tolerance_percent": 2,
+    "solution": "The limit is the Carnot efficiency: eta = 1 - Tc / Th.\neta = 1 - 300 / 820 = 0.6341.\neta = 63.41 %."
+  },
+  {
+    "id": "TH-04",
+    "topic": "thermodynamics",
+    "question": "2 kg of water is heated from 290 K to 350 K. Take its specific heat as a constant 4.18 kJ/(kg K). What is the entropy change of the water? Answer in kJ/K.",
+    "answer": 1.572,
+    "unit": "kJ/K",
+    "tolerance_percent": 2,
+    "solution": "For a liquid with constant specific heat: dS = m c ln(T2 / T1).\ndS = 2 x 4.18 x ln(350 / 290) = 8.36 x 0.18805.\ndS = 1.572 kJ/K."
+  },
+  {
+    "id": "TH-05",
+    "topic": "thermodynamics",
+    "question": "0.5 kg of air (R = 0.287 kJ/(kg K)) expands isothermally at 400 K from 0.2 m^3 to 0.6 m^3. How much work does the air do? Answer in kJ.",
+    "answer": 63.06,
+    "unit": "kJ",
+    "tolerance_percent": 2,
+    "solution": "Isothermal ideal gas: W = m R T ln(V2 / V1).\nW = 0.5 x 0.287 x 400 x ln(0.6 / 0.2) = 57.4 x 1.0986.\nW = 63.06 kJ."
+  },
+  {
+    "id": "TH-06",
+    "topic": "thermodynamics",
+    "question": "An ideal air-standard Otto cycle has a compression ratio of 9. Take the ratio of specific heats as 1.4. What is its thermal efficiency? Answer as a percentage.",
+    "answer": 58.48,
+    "unit": "%",
+    "tolerance_percent": 2,
+    "solution": "Otto cycle: eta = 1 - 1 / r^(gamma - 1).\neta = 1 - 1 / 9^0.4 = 1 - 1 / 2.4082.\neta = 58.48 %."
+  },
+  {
+    "id": "FL-01",
+    "topic": "fluid mechanics",
+    "question": "What is the gauge pressure 7.5 m below the surface of seawater of density 1025 kg/m^3? Take g = 9.81 m/s^2. Answer in kPa.",
+    "answer": 75.41,
+    "unit": "kPa",
+    "tolerance_percent": 2,
+    "solution": "Hydrostatics: p = rho g h.\np = 1025 x 9.81 x 7.5 = 75,414 Pa.\np = 75.41 kPa."
+  },
+  {
+    "id": "FL-02",
+    "topic": "fluid mechanics",
+    "question": "Water flows at 1.5 m/s through a pipe of 80 mm internal diameter, which then narrows to 50 mm. What is the speed of the water in the narrow section? Answer in m/s.",
+    "answer": 3.84,
+    "unit": "m/s",
+    "tolerance_percent": 2,
+    "solution": "Continuity: A1 v1 = A2 v2, so v2 = v1 (d1 / d2)^2.\nv2 = 1.5 x (80 / 50)^2 = 1.5 x 2.56.\nv2 = 3.84 m/s."
+  },
+  {
+    "id": "FL-03",
+    "topic": "fluid mechanics",
+    "question": "Water (density 1000 kg/m^3) flows along a horizontal pipe. At section 1 the pressure is 180 kPa and the speed is 2 m/s. At section 2 the speed is 6 m/s. Ignoring losses, what is the pressure at section 2? Answer in kPa.",
+    "answer": 164,
+    "unit": "kPa",
+    "tolerance_percent": 2,
+    "solution": "Bernoulli at one height: p1 + rho v1^2 / 2 = p2 + rho v2^2 / 2.\np2 = 180,000 + 0.5 x 1000 x (2^2 - 6^2) = 180,000 - 16,000 Pa.\np2 = 164 kPa."
+  },
+  {
+    "id": "FL-04",
+    "topic": "fluid mechanics",
+    "question": "Oil of density 870 kg/m^3 and dynamic viscosity 0.035 Pa s flows at 1.2 m/s through a pipe of 40 mm internal diameter. What is the Reynolds number? It has no unit.",
+    "answer": 1193,
+    "unit": "",
+    "tolerance_percent": 2,
+    "solution": "Re = rho v D / mu.\nRe = 870 x 1.2 x 0.040 / 0.035 = 41.76 / 0.035.\nRe = 1193, so the flow is laminar."
+  },
+  {
+    "id": "FL-05",
+    "topic": "fluid mechanics",
+    "question": "Water flows at 2.5 m/s through 120 m of straight pipe with an internal diameter of 0.1 m. The Darcy friction factor is 0.02. What is the head loss due to friction? Take g = 9.81 m/s^2. Answer in m.",
+    "answer": 7.645,
+    "unit": "m",
+    "tolerance_percent": 2,
+    "solution": "Darcy-Weisbach: hf = f (L / D) v^2 / (2 g).\nhf = 0.02 x (120 / 0.1) x 2.5^2 / (2 x 9.81) = 24 x 0.3186.\nhf = 7.645 m."
+  },
+  {
+    "id": "FL-06",
+    "topic": "fluid mechanics",
+    "question": "An open water tank drains through a small hole in its side, 3.2 m below the free surface. Ignoring losses, how fast does the water leave the hole? Take g = 9.81 m/s^2. Answer in m/s.",
+    "answer": 7.924,
+    "unit": "m/s",
+    "tolerance_percent": 2,
+    "solution": "Bernoulli from the free surface to the jet (Torricelli): v = sqrt(2 g h).\nv = sqrt(2 x 9.81 x 3.2) = sqrt(62.78).\nv = 7.924 m/s."
+  },
+  {
+    "id": "SM-01",
+    "topic": "solid mechanics",
+    "question": "A solid steel rod of 20 mm diameter carries an axial tensile load of 50 kN. What is the tensile stress in the rod? Answer in MPa.",
+    "answer": 159.2,
+    "unit": "MPa",
+    "tolerance_percent": 2,
+    "solution": "Axial stress: sigma = F / A, with A = pi d^2 / 4.\nA = pi x 0.020^2 / 4 = 3.142e-4 m^2.\nsigma = 50,000 / 3.142e-4 = 159.2 MPa."
+  },
+  {
+    "id": "SM-02",
+    "topic": "solid mechanics",
+    "question": "An aluminium bar 1.5 m long, with a cross-sectional area of 400 mm^2, carries an axial load of 28 kN. Take E = 70 GPa. How much does the bar stretch? Answer in mm.",
+    "answer": 1.5,
+    "unit": "mm",
+    "tolerance_percent": 2,
+    "solution": "Elongation: delta = F L / (A E).\ndelta = 28,000 x 1.5 / (400e-6 x 70e9) = 42,000 / 2.8e7 m.\ndelta = 0.0015 m = 1.5 mm."
+  },
+  {
+    "id": "SM-03",
+    "topic": "solid mechanics",
+    "question": "A rectangular timber beam is 60 mm wide and 150 mm deep and carries a bending moment of 9 kN m. What is the maximum bending stress? Answer in MPa.",
+    "answer": 40,
+    "unit": "MPa",
+    "tolerance_percent": 2,
+    "solution": "sigma = M y / I, with I = b h^3 / 12 and y = h / 2, so sigma = 6 M / (b h^2).\nsigma = 6 x 9000 / (0.060 x 0.150^2) = 54,000 / 0.00135.\nsigma = 40 MPa."
+  },
+  {
+    "id": "SM-04",
+    "topic": "solid mechanics",
+    "question": "A solid circular shaft of 50 mm diameter transmits a torque of 1.2 kN m. What is the maximum shear stress in the shaft? Answer in MPa.",
+    "answer": 48.89,
+    "unit": "MPa",
+    "tolerance_percent": 2,
+    "solution": "tau = T r / J, with J = pi d^4 / 32, so tau = 16 T / (pi d^3).\ntau = 16 x 1200 / (pi x 0.050^3) = 19,200 / 3.927e-4.\ntau = 48.89 MPa."
+  },
+  {
+    "id": "SM-05",
+    "topic": "solid mechanics",
+    "question": "A cantilever 2 m long carries a point load of 5 kN at its free end. E = 200 GPa and I = 8 x 10^-6 m^4. What is the deflection at the free end? Answer in mm.",
+    "answer": 8.333,
+    "unit": "mm",
+    "tolerance_percent": 2,
+    "solution": "Cantilever with an end load: delta = P L^3 / (3 E I).\ndelta = 5000 x 2^3 / (3 x 200e9 x 8e-6) = 40,000 / 4.8e6 m.\ndelta = 0.008333 m = 8.333 mm."
+  },
+  {
+    "id": "SM-06",
+    "topic": "solid mechanics",
+    "question": "A simply supported beam with a 4 m span carries a 12 kN point load at mid-span. E = 200 GPa and I = 2.5 x 10^-5 m^4. What is the deflection at mid-span? Answer in mm.",
+    "answer": 3.2,
+    "unit": "mm",
+    "tolerance_percent": 2,
+    "solution": "Central point load: delta = P L^3 / (48 E I).\ndelta = 12,000 x 4^3 / (48 x 200e9 x 2.5e-5) = 768,000 / 2.4e8 m.\ndelta = 0.0032 m = 3.2 mm."
+  },
+  {
+    "id": "DY-01",
+    "topic": "dynamics",
+    "question": "A car accelerates uniformly from 5 m/s to 25 m/s in 8 s. How far does it travel in that time? Answer in m.",
+    "answer": 120,
+    "unit": "m",
+    "tolerance_percent": 2,
+    "solution": "Uniform acceleration: s = (u + v) t / 2.\ns = (5 + 25) x 8 / 2.\ns = 120 m."
+  },
+  {
+    "id": "DY-02",
+    "topic": "dynamics",
+    "question": "A stone is thrown horizontally at 12 m/s from the top of a cliff 45 m high. Ignoring air resistance and taking g = 9.81 m/s^2, how far from the foot of the cliff does it land? Answer in m.",
+    "answer": 36.35,
+    "unit": "m",
+    "tolerance_percent": 2,
+    "solution": "Fall time from h = g t^2 / 2: t = sqrt(2 x 45 / 9.81) = 3.029 s.\nThe horizontal speed stays 12 m/s, so x = 12 x 3.029.\nx = 36.35 m."
+  },
+  {
+    "id": "DY-03",
+    "topic": "dynamics",
+    "question": "A spring of stiffness 800 N/m is compressed 0.15 m and then released, pushing a 0.5 kg block along a smooth horizontal surface. How fast is the block moving when it leaves the spring? Answer in m/s.",
+    "answer": 6,
+    "unit": "m/s",
+    "tolerance_percent": 2,
+    "solution": "Energy: k x^2 / 2 = m v^2 / 2, so v = x sqrt(k / m).\nv = 0.15 x sqrt(800 / 0.5) = 0.15 x 40.\nv = 6 m/s."
+  },
+  {
+    "id": "DY-04",
+    "topic": "dynamics",
+    "question": "A 1200 kg car moving at 15 m/s runs into a stationary 800 kg car, and the two move off locked together. What is their speed just after the impact? Answer in m/s.",
+    "answer": 9,
+    "unit": "m/s",
+    "tolerance_percent": 2,
+    "solution": "Momentum is conserved: m1 u1 = (m1 + m2) v.\nv = 1200 x 15 / (1200 + 800) = 18,000 / 2000.\nv = 9 m/s."
+  },
+  {
+    "id": "DY-05",
+    "topic": "dynamics",
+    "question": "A 2.5 kg mass hangs on a spring of stiffness 4000 N/m. What is the natural frequency of its vertical vibration? Answer in Hz.",
+    "answer": 6.366,
+    "unit": "Hz",
+    "tolerance_percent": 2,
+    "solution": "omega_n = sqrt(k / m) = sqrt(4000 / 2.5) = 40 rad/s.\nf = omega_n / (2 pi) = 40 / 6.283.\nf = 6.366 Hz."
+  },
+  {
+    "id": "DY-06",
+    "topic": "dynamics",
+    "question": "A flywheel with a moment of inertia of 3.2 kg m^2 spins at 600 rpm. How much kinetic energy does it store? Answer in kJ.",
+    "answer": 6.317,
+    "unit": "kJ",
+    "tolerance_percent": 2,
+    "solution": "omega = 600 x 2 pi / 60 = 62.83 rad/s.\nKE = I omega^2 / 2 = 3.2 x 62.83^2 / 2 = 6317 J.\nKE = 6.317 kJ."
+  }
+]
